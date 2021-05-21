@@ -149,3 +149,6 @@ class DataEntityRep(DataEntity):
             bitPtr = newBitPtr
 
         return self.value, newBitPtr
+
+    def __repr__(self):
+        return repr(self.num_reps)

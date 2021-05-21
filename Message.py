@@ -39,6 +39,9 @@ class Message:
 
         return
 
+    def __repr__(self):
+        return repr(self.fields)
+
 
 class TableMessage(Message):
 
