@@ -24,6 +24,9 @@ class Descriptor:
     def tableB_string(self):
         return "%1d-%02d-%03d" % (self.f, self.x, self.y)
 
+    def descriptor_code(self):
+        return (self.f << 14) + (self.x << 8) + self.y
+
     def expand_sequence(self, tableD):
 
         for desc in tableD[self.fxy_string()].descriptors:

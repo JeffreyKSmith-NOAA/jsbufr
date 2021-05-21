@@ -22,15 +22,18 @@ class Message:
 
             if self.s3.descriptors[d].f == 0:
                 self.fields.append(DataEntity.DataEntityLeaf(
-                    self.s3.descriptors[d], tableB))
+                    self.s3.descriptors[d].fxy_string(), tableB))
             elif self.s3.descriptors[d].f == 1:
                 self.fields.append(DataEntity.DataEntityRep(
-                    self.s3.descriptors[d],
+                    self.s3.descriptors[d].fxy_string(),
                     self.s3.descriptors[d+1:]))
                 d += len(self.fields[-1].members)
+            elif self.s3.descriptors[d].f == 2:
+                pass
             elif self.s3.descriptors[d].f == 3:
                 self.fields.append(DataEntity.DataEntitySeq(
-                    self.s3.descriptors[d], self.s4, tableB, tableD))
+                    self.s3.descriptors[d].fxy_string(), self.s4, tableB,
+                    tableD))
 
             d += 1
 

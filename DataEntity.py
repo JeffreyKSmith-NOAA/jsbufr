@@ -4,26 +4,24 @@ import Descriptor
 
 class DataEntity:
 
-    def __init__(self, descriptor):
+    def __init__(self, descriptorCode):
 
-        self.descriptor = descriptor
+        self.descriptor = Descriptor.Descriptor(descriptorCode)
 
         return
 
 class DataEntityLeaf(DataEntity):
 
-    def __init__(self, descriptor, tableB):
+    def __init__(self, descriptorCode, tableB):
 
-        DataEntity.__init__(self, descriptor)
+        DataEntity.__init__(self, descriptorCode)
 
         ks = tableB.keys()
-        ks.sort()
-        print(ks)
-        self.mnemonic = tableB[descriptor].mnemonic
-        self.nbits = tableB[descriptor].nbits
-        self.scale = tableB[descriptor].scale
-        self.offset = tableB[descriptor].offset
-        self.units = tableB[descriptor].units
+        self.mnemonic = tableB[descriptorCode].mnemonic
+        self.nbits = tableB[descriptorCode].nbits
+        self.scale = tableB[descriptorCode].scale
+        self.offset = tableB[descriptorCode].offset
+        self.units = tableB[descriptorCode].units
         self.value = None
 
         return
@@ -68,22 +66,22 @@ class DataEntityLeaf(DataEntity):
 
     def __repr__(self):
 
-        return("first bit = %d, number of bits = %d, repetition is %d" \
-               % (self.first_bit, self.nbits, self.repetition_index))
+        return("mnemonic = %s, number of bits = %d, scale is %f" \
+               % (self.mnemonic, self.nbits, self.scale))
 
 
 class DataEntitySeq(DataEntity):
 
-    def __init__(self, descriptor, s4, tableB, tableD):
+    def __init__(self, descriptorCode, s4, tableB, tableD):
 
-        DataEntity.__init__(self, descriptor)
+        DataEntity.__init__(self, descriptorCode)
         
-        self.mnemonic = tableD[descriptor].mnemonic
+        self.mnemonic = tableD[descriptorCode].mnemonic
         self.members = []
-        for d in tableD[descriptor].descriptors:
-            if d.f == 0:
-                self.members.append(DataEntityLeaf(s4, tableB))
-            elif d.f == 3:
+        for d in tableD[descriptorCode].descriptors:
+            if d[0] == '0':
+                self.members.append(DataEntityLeaf(d, tableB))
+            elif d[0] == '3':
                 self.members.append(DataEntitySeq(d, s4, tableB, tableD))
 
         self.value = []
@@ -107,18 +105,20 @@ class DataEntitySeq(DataEntity):
 
     def __repr__(self):
 
-        return "sequence has %d members with %d repetitiions " % (
-            len(self.members), self.num_reps)
+        return "sequence %s has %d members " % \
+            (self.mnemonic, len(self.members))
 
 class DataEntityRep(DataEntity):
 
-    def __init__(self, repDescriptor, descriptorList):
+    def __init__(self, repDescriptorCode, descriptorList):
 
-        DataEntity.__init__(self, repDescriptor)
+        DataEntity.__init__(self, repDescriptorCode)
 
         if self.descriptor.y == 0:
             self.members = descriptorList[1:self.descriptor.x+1]
             self.num_reps = None
+            # Next field should contain the number of repetitons, so get
+            #length of the field
             if descriptorList[0].y == 0:
                 self.nbits_rep = 1
             elif descriptorList[0].y == 1:
@@ -126,8 +126,8 @@ class DataEntityRep(DataEntity):
             elif descriptorList[0].y == 2:
                 self.nbits_rep = 16
         else:
-            self.members = descriptorList[:repDescriptor.x]
-            self.num_reps = repDescriptor.y
+            self.members = descriptorList[:self.descriptor.x]
+            self.num_reps = self.descriptor.y
             self.nbits_rep = 0
 
         return
