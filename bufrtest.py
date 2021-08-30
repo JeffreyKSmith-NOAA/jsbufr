@@ -13,9 +13,9 @@ import Section5
 import TableB
 import TableD
 
-bufrFile = open("../test2/xx007", 'r')
-tableB = TableB.TableB("../test2/bufrtab.TableB_STD_0_35")
-tableD = TableD.TableD("../test2/bufrtab.TableD_STD_0_35")
+bufrFile = open("../../test2/xx007", 'r')
+tableB = TableB.TableB("../../test2/bufrtab.TableB_STD_0_35")
+tableD = TableD.TableD("../../test2/bufrtab.TableD_STD_0_35")
 msgCount = 0
 while True:
     msgCount += 1
@@ -35,11 +35,12 @@ while True:
     s4 = Section4.Section4(bufrFile, s0.edition_number)
     s5 = Section5.Section5(bufrFile)
 
-    tableB.extend_table(s4.data_contents)
-    ks = tableB.keys()
-    ks.sort()
-    print ks
-    tableD.extend_table(s4.data_contents, tableB)
+    if s1.year == 0 and s1.month == 0 and s1.day == 0:
+        tableB.extend_table(s4.data_contents)
+        ks = tableB.keys()
+        ks.sort()
+        print ks
+        tableD.extend_table(s4.data_contents, tableB)
 
     print(s5)
     #if (s0.message_length % 4) == 0:
