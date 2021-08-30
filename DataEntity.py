@@ -17,25 +17,26 @@ class DataEntityLeaf(DataEntity):
         DataEntity.__init__(self, descriptorCode)
 
         ks = tableB.keys()
-        self.mnemonic = tableB[descriptorCode].mnemonic
-        self.nbits = tableB[descriptorCode].nbits
-        self.scale = tableB[descriptorCode].scale
-        self.offset = tableB[descriptorCode].offset
-        self.units = tableB[descriptorCode].units
+        #self.mnemonic = tableB[descriptorCode].mnemonic
+        #self.nbits = tableB[descriptorCode].nbits
+        #self.scale = tableB[descriptorCode].scale
+        #self.offset = tableB[descriptorCode].offset
+        #self.units = tableB[descriptorCode].units
+        self.B = tableB[descriptorCode]
         self.value = None
 
         return
 
     def get_value(self, s4, bitPtr):
 
-        if self.units == "CCITT IA5":
+        if self.B.units == "CCITT IA5":
             if (bitPtr % 8) == 0:
                 self.value \
-                    = s4.data_contents[bitPtr/8:(bitPtr+self.nbits)/8] \
+                    = s4.data_contents[bitPtr/8:(bitPtr+self.B.nbits)/8] \
                         .tostring()
             else:
                 iValues = array.array('B')
-                for i in range(self.nbits/8):
+                for i in range(self.B.nbits/8):
                     for j in range(8):
                         if s4.data_content[bytePtr] & BIT_MAP[varBitPtr % 8]:
                             v = 2*iValues + 1
@@ -48,7 +49,7 @@ class DataEntityLeaf(DataEntity):
             self.value = 0
             bytePtr = bitPtr/8
             varBitPtr = bitPtr % 8
-            for i in range(self.nbits):
+            for i in range(self.B.nbits):
                 if s4.data_content[bytePtr] & BIT_MAP[varBitPtr % 8]:
                     self.value = 2*self.value + 1
                 else:
@@ -58,16 +59,16 @@ class DataEntityLeaf(DataEntity):
                     varBitPtr = 0
                     bytePtr += 1
             if self.units != "CODE TABLE":
-                self.value = self.scale*self.value + self.offset
+                self.value = self.B.scale*self.value + self.B.offset
 
-        newBitPtr = bitPtr + self.nbits
+        newBitPtr = bitPtr + self.B.nbits
 
         return self.value, newBitPtr
 
     def __repr__(self):
 
         return("mnemonic = %s, number of bits = %d, scale is %f" \
-               % (self.mnemonic, self.nbits, self.scale))
+               % (self.B.mnemonic, self.B.nbits, self.B.scale))
 
 
 class DataEntitySeq(DataEntity):
@@ -79,6 +80,7 @@ class DataEntitySeq(DataEntity):
         self.mnemonic = tableD[descriptorCode].mnemonic
         self.members = []
         for d in tableD[descriptorCode].descriptors:
+            print "adding ", d, " to ", self.mnemonic
             if d[0] == '0':
                 self.members.append(DataEntityLeaf(d, tableB))
             elif d[0] == '3':
@@ -140,7 +142,9 @@ class DataEntityRep(DataEntity):
         newBitPtr = bitPtr + self.nrep_bits
         return newBitPtr
 
-    def get_value(self, bitPtr):
+    def get_value(self, s4, bitPtr):
+
+        bitPtr = bitPtr + self.set_num_reps(s4.data_contents, bitPtr)
 
         self.value = []
         for m in self.members:
@@ -151,4 +155,4 @@ class DataEntityRep(DataEntity):
         return self.value, newBitPtr
 
     def __repr__(self):
-        return repr(self.num_reps)
+        return repr(self.num_reps,)
